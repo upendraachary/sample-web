@@ -21,20 +21,21 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image..."
-                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
-                    sh "docker build -t ${IMAGE_NAME}:latest ."
+                    // FIXED: Included ${DOCKER_USER}/ prefix so it targets your profile repository
+                    sh "docker build -t ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                    sh "docker build -t ${DOCKER_USER}/${IMAGE_NAME}:latest ."
                 }
             }
         }
-        
         stage('Push to Registry') {
             steps {
                 script {
                     echo "Logging into Docker Hub and pushing image..."
-                    withCredentials([usernamePassword(credentialsId: DOCKER_REGISTRY_CREDS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh "echo '${DOCKER_PASS}' | docker login -u '${DOCKER_USER}' --password-stdin"
-                        sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-                        sh "docker push ${IMAGE_NAME}:latest"
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials-id', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER_ENV')]) {
+                        sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER_ENV --password-stdin"
+                        // FIXED: Included ${DOCKER_USER}/ prefix for the push commands
+                        sh "docker push ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+                        sh "docker push ${DOCKER_USER}/${IMAGE_NAME}:latest"
                     }
                 }
             }
