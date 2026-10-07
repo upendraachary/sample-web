@@ -4,7 +4,8 @@ pipeline {
     environment {
         // Define your Docker credentials ID and image name
         DOCKER_REGISTRY_CREDS = 'docker-hub-credentials-id'
-        IMAGE_NAME = 'yourdockerusername/simple-html-app'
+        DOCKER_USER = 'upendraachary'
+        IMAGE_NAME  = 'simple-html-app'
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
     
