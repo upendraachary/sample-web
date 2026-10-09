@@ -58,7 +58,7 @@ pipeline {
     post {
         always {
             echo "Cleaning up local images..."
-            sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:13 || true"
+            sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest || true"
         }
     }
 }
