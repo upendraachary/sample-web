@@ -1,11 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Testing pipeline</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>To-Do</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f5f1;--card:#fff;--text:#1f2328;--muted:#8a8f98;--accent:#3d6b5a;--line:#e8e6df}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17191c;--card:#202327;--text:#e8e8e8;--muted:#8a8f98;--accent:#7fb8a1;--line:#2c3036}}
+:root[data-theme="dark"]{--bg:#17191c;--card:#202327;--text:#e8e8e8;--muted:#8a8f98;--accent:#7fb8a1;--line:#2c3036}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:40px 20px}
+h1{font-size:2rem;margin:0 0 4px}
+.sub{color:var(--muted);font-family:system-ui,sans-serif;font-size:.9rem;margin-bottom:24px}
+.add{display:flex;gap:8px;margin-bottom:16px}
+input[type=text]{flex:1;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);font-size:1rem;font-family:system-ui,sans-serif}
+input[type=text]:focus{outline:2px solid var(--accent)}
+button{font-family:system-ui,sans-serif;cursor:pointer}
+.add button{padding:0 18px;border:0;border-radius:10px;background:var(--accent);color:var(--bg);font-size:1rem;font-weight:600}
+.filters{display:flex;gap:6px;margin-bottom:12px}
+.filters button{border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 12px;border-radius:999px;font-size:.85rem}
+.filters button.on{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+ul{list-style:none;margin:0;padding:0;background:var(--card);border-radius:12px;border:1px solid var(--line)}
+li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+li:last-child{border-bottom:0}
+li span{flex:1;word-break:break-word}
+li.done span{text-decoration:line-through;color:var(--muted)}
+li input{width:18px;height:18px;accent-color:var(--accent)}
+li button{border:0;background:none;color:var(--muted);font-size:1.2rem}
+li button:hover{color:#c0392b}
+.empty{padding:24px;text-align:center;color:var(--muted);font-family:system-ui,sans-serif}
+.foot{display:flex;justify-content:space-between;margin-top:12px;color:var(--muted);font-family:system-ui,sans-serif;font-size:.85rem}
+.foot button{border:0;background:none;color:var(--muted);text-decoration:underline}
+</style>
 </head>
 <body>
-    <h1>Hello, World! This is version 2.0!.. Upendra congratulations you did it</h1>
-    <h2>Webhook triggered successfully 1 </h2>
+<main>
+  <h1>My Tasks</h1>
+  <div class="sub" id="date"></div>
+  <div class="add">
+    <input type="text" id="in" placeholder="Add a task…" autocomplete="off">
+    <button id="addBtn">Add</button>
+  </div>
+  <div class="filters" id="filters">
+    <button data-f="all" class="on">All</button>
+    <button data-f="active">Active</button>
+    <button data-f="done">Done</button>
+  </div>
+  <ul id="list"></ul>
+  <div class="foot"><span id="count"></span><button id="clear">Clear completed</button></div>
+</main>
+<script>
+let todos=[],filter='all',nextId=1;
+try{const s=localStorage.getItem('todos');if(s){todos=JSON.parse(s);nextId=Math.max(0,...todos.map(t=>t.id))+1}}catch(e){}
+if(!todos.length)todos=[{id:nextId++,text:'Try adding a task',done:false},{id:nextId++,text:'Check one off',done:true}];
+const $=id=>document.getElementById(id);
+$('date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+function save(){try{localStorage.setItem('todos',JSON.stringify(todos))}catch(e){}}
+function render(){
+  const list=$('list');list.innerHTML='';
+  const shown=todos.filter(t=>filter==='all'||(filter==='done')===t.done);
+  if(!shown.length){list.innerHTML='<div class="empty">Nothing here.</div>'}
+  shown.forEach(t=>{
+    const li=document.createElement('li');if(t.done)li.className='done';
+    const cb=document.createElement('input');cb.type='checkbox';cb.checked=t.done;
+    cb.onchange=()=>{t.done=cb.checked;save();render()};
+    const sp=document.createElement('span');sp.textContent=t.text;
+    const del=document.createElement('button');del.textContent='×';del.setAttribute('aria-label','Delete');
+    del.onclick=()=>{todos=todos.filter(x=>x.id!==t.id);save();render()};
+    li.append(cb,sp,del);list.appendChild(li);
+  });
+  const left=todos.filter(t=>!t.done).length;
+  $('count').textContent=left+' task'+(left===1?'':'s')+' left';
+}
+function add(){const v=$('in').value.trim();if(!v)return;todos.unshift({id:nextId++,text:v,done:false});$('in').value='';save();render()}
+$('addBtn').onclick=add;
+$('in').addEventListener('keydown',e=>{if(e.key==='Enter')add()});
+$('clear').onclick=()=>{todos=todos.filter(t=>!t.done);save();render()};
+$('filters').onclick=e=>{const f=e.target.dataset.f;if(!f)return;filter=f;
+  [...$('filters').children].forEach(b=>b.classList.toggle('on',b.dataset.f===f));render()};
+render();
+</script>
 </body>
 </html>
