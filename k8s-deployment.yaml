@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: html-app-container
-        image: upendraachary/simple-html-app:13  # <-- Replace with your Docker Hub Username
+        image: upendraachary/simple-html-app:latest  # <-- Replace with your Docker Hub Username
         imagePullPolicy: Always
         ports:
         - containerPort: 80

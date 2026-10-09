@@ -44,15 +44,18 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    echo "Applying Kubernetes manifests..."
-                    // Assumes Jenkins server has kubectl configured or target cluster access setup
-                    sh "kubectl apply -f k8s-deployment.yaml"
-                    
-                    echo "Forcing deployment update to pull the latest image..."
-                    sh "kubectl rollout restart deployment/html-app-deployment"
-                }
-            }
+                    echo 'Updating deployment image tag and applying manifests...'
+                    // This command dynamically swaps out the image tag in the YAML file to match your build number
+                    sh "sed -i 's|image: upendraachary/simple-html-app:.*|image: upendraachary/simple-html-app:${BUILD_NUMBER}|g' k8s-deployment.yaml"
+            
+                    sh 'kubectl apply -f k8s-deployment.yaml'
+            
+                    echo 'Forcing deployment update...'
+                    sh 'kubectl rollout restart deployment/html-app-deployment'
+                     'kubectl rollout status deployment/html-app-deployment'
         }
+    }
+}
     }
     
     post {
