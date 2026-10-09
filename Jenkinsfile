@@ -22,8 +22,10 @@ pipeline {
                 script {
                     echo "Building Docker image..."
                     // FIXED: Included ${DOCKER_USER}/ prefix so it targets your profile repository
-                    sh "docker build -t ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
-                    sh "docker build -t ${DOCKER_USER}/${IMAGE_NAME}:latest ."
+                    // Inside your Jenkinsfile Build stage, change the command to this:
+                    sh "docker build --no-cache -t upendraachary/simple-html-app:${BUILD_NUMBER} ."
+                    sh "docker build --no-cache -t upendraachary/simple-html-app:latest ."
+
                 }
             }
         }
